@@ -23,26 +23,73 @@ Today's class will be based on [Chapter 12: "Multiple Regression"](https://david
 
 **Prompt:** To begin, we are going to go through the three common steps of exploring a new dataset: 1) looking at the raw data, 2) computing summary statistics, and 3) creating visualizations of the data. Scene one will focus on the first two steps. Useful commands to use here: `glimpse()`,`sample_n`, and `skim` (from the skimr package). What observations are surprising? Do you believe this data? What should you check out?
 
+```{r}
+x %>% 
+  sample_n(size = 5) %>% 
+  skim()
+
+
+x %>% 
+  select(name, earnings) %>% 
+  arrange(desc(earnings))
+
+```
+
 
 ### Scene 2
 
 **Prompt:** What's the correlation between the average faculty salary in 2001 and the median income of students 10 years after entering? What's the correlation between the average SAT scores in 2001 and the median income of students 10 years after entering? Find these by doing two separate correlations first, and then making a correlation matrix (instructions in the book). Hint: Make sure to omit all missing pairs from the two variables while finding the correlation. 
 
+```{r}
+x %>% 
+  summarise(cc = cor(faculty, earnings),
+            sat_earn = cor(sat, earnings)) 
 
+x %>% 
+  select(faculty, earnings, sat) %>% 
+  cor()
+```
 
 ### Scene 3
 
 **Prompt:** Visualize the relationships between the outcome variable (`earnings`) and the two key numerical explanatory variables (`faculty` and `sat`), one at a time. Create a ggplot for each showing the line of best fit.
+
+```{r}
+facultyearnings <- lm(earnings ~ faculty, data = x)
+
+ggplot(x, aes(x = faculty, y = earnings)) + geom_point() +
+  geom_smooth(method = "lm", se = F)
+
+ggplot(x, aes(x = sat, y = earnings)) + geom_point() +
+  geom_smooth(method = "lm", se = F)
+```
 
 
 ### Scene 4
 
 **Prompt:** Now let's quantify these relationships between the two explanatory variables and the outcome variable. Fit a multiple gression model for `earnings` using `sat` and `faculty`. Write a bullet point interpreting each of the three values in the estimate column.
 
+```{r}
+multiple <- lm(earnings ~ faculty + sat, data = x)
+summary(multiple) %>% 
+  tidy()
+
+ggplot(x, aes(x = earnings, y = faculty, color = sat)) + geom_point()
+```
+
 
 ### Scene 5
 
 **Prompt:** Imagine that you are the university president. There's a global pandemic that is causing serious financial damage to the school endowment, and in response, you want to cut the financial aid budget. However, because many academically talented students will go to whichever school gives them the best financial aid package, slashing the financial aid budget will cause the average SAT score to decrease from 1400 to 1300. Apply the Rubin Causal Model to estimate the causal effect of SAT scores on students' median earnings. Write down the units, the treatments, and the outcomes. Define the causal effect of `sat` on median earnings. What is the fundamental problem of causal inference? What **must** you assume for this causal model to make a causal claim?
+
+units : individual colleges
+treatment: cutting the financial aid leads to a 100 point downward trend in the avergae sat score
+outcome: median earnings 10 years after entering the workforce
+casual effect: the difference in median earnings associated with the 100 point decline in mean SAT scores
+
+the casual effect on median earnings is the difference between what median earnings would have been under the old policy and what the median earnings would have been under the new policy
+problem: You cannot observe the causual effet on a single unit. 
+Assumption: No confounding variables, assignment of treatment is entirely random, 
 
 
 ### Scene 6
